@@ -9,7 +9,7 @@ function createCard(cardData, handleDelete) {
   // клонирование шаблона карточки
   const cardElement = cardTemplate.querySelector('.card').cloneNode(true);
 
-  // устанавка значений
+  // установка значений
   const cardImage = cardElement.querySelector('.card__image');
   const cardTitle = cardElement.querySelector('.card__title');
   cardImage.src = cardData.link;
