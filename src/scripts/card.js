@@ -28,3 +28,13 @@ export function createCard(cardData, handleDelete, handleLikeCard, handleImageCl
 
   return cardElement;
 }
+
+// Функция удаления карточки
+export function handleDeleteCard(cardElement) {
+  cardElement.remove();
+}
+
+// Функция обработчика лайка
+export function handleLikeCard(likeButton) {
+  likeButton.classList.toggle('card__like-button_active');
+}

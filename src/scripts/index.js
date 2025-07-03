@@ -5,7 +5,7 @@ import '../pages/index.css'; // добавьте импорт главного �
 import logoPath from '../images/logo.svg';
 import avatarPath from '../images/avatar.jpg';
 import { initialCards } from './cards.js';
-import { createCard } from './card.js';
+import { createCard, handleDeleteCard, handleLikeCard } from './card.js';
 import { openModal, closeModal, closeByEsc, setOverlayCloseHandlers } from './modal.js';
 
 const logo = document.getElementById('logo');
@@ -35,16 +35,6 @@ const cardNameInput = addCardForm.querySelector('.popup__input_type_card-name');
 const cardLinkInput = addCardForm.querySelector('.popup__input_type_url');
 
 setOverlayCloseHandlers();
-
-// Функция удаления карточки
-function handleDeleteCard(cardElement) {
-  cardElement.remove();
-}
-
-// Функция обработчика лайка
-function handleLikeCard(likeButton) {
-  likeButton.classList.toggle('card__like-button_active');
-}
 
 // Функция обработчика клика по картинке карточки
 function handleImageClick(cardData) {
