@@ -7,6 +7,41 @@
   background-size: cover;
   background-position: center;
   margin: 0 29px 0 0;
+  position: relative;
+  cursor: pointer;
+  overflow: hidden; /* чтобы иконка не выходила за круг */
+}
+
+.profile__overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.profile__avatar-edit-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 26px;
+  height: 26px;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 2;
+  pointer-events: none; /* Чтобы не мешать клику */
+}
+
+/* Наведение */
+
+.profile__image:hover .profile__overlay {
+  opacity: 1;
+}
+
+.profile__image:hover .profile__avatar-edit-icon {
+  opacity: 1;
 }
 
 @media screen and (max-width: 740px) {

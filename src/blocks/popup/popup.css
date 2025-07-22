@@ -26,6 +26,23 @@
   transition: visibility 0s 0.6s, opacity 0.6s;
 }
 
-/*.popup.popup_opened {
-  display: flex; 
-}*/
+.popup__input_type_error {
+  border-bottom: 1px solid red;
+  color: red;
+}
+
+.popup__input-error {
+  font-size: 12px;
+  line-height: 1.2;
+  color: red;
+  margin-top: 5px;
+  min-height: 14px;
+  display: block; 
+  opacity: 0; 
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.popup__input-error_visible {
+  opacity: 1;
+}
