@@ -8,12 +8,10 @@ import {
   closeModal,
   closeByEsc,
   setOverlayCloseHandlers,
-  renderSaving,
 } from "./modal.js";
 import {
   enableValidation,
   clearValidation,
-  validationConfig,
   isImageUrlValid,
 } from "./validation.js";
 import {
@@ -55,6 +53,7 @@ const jobInput = editProfileForm.querySelector(
 const profileTitle = document.querySelector(".profile__title");
 const profileDescription = document.querySelector(".profile__description");
 const addCardForm = document.querySelector(".popup_type_new-card .popup__form");
+const templateElement = document.querySelector('#card-template').content;
 const cardNameInput = addCardForm.querySelector(".popup__input_type_card-name");
 const cardLinkInput = addCardForm.querySelector(".popup__input_type_url");
 const deleteForm = document.querySelector(".popup_type_delete-card");
@@ -63,9 +62,28 @@ const icon = new Image();
 icon.src = editIcon;
 icon.alt = "Редактировать аватар";
 icon.classList.add("profile__avatar-edit-icon");
+const validationConfig = {
+  formSelector: ".popup__form",
+  inputSelector: ".popup__input",
+  submitButtonSelector: ".popup__button",
+  inactiveButtonClass: "popup__button_disabled",
+  inputErrorClass: "popup__input_type_error",
+  errorClass: "popup__input-error_visible",
+};
+
+enableValidation(validationConfig);
 
 document.getElementById("avatar").append(icon);
 setOverlayCloseHandlers();
+
+// Универсальная функция renderSaving
+export function renderSaving(
+  isSaving,
+  buttonElement,
+  defaultText = "Сохранить"
+) {
+  buttonElement.textContent = isSaving ? "Сохранение..." : defaultText;
+}
 
 // Функция обработчика клика по картинке карточки
 function handleImageClick(cardData) {
@@ -81,15 +99,18 @@ Promise.all([getUserInfo(), getInitialCards()])
     profileTitle.textContent = userData.name;
     profileDescription.textContent = userData.about;
     avatar.style.backgroundImage = `url(${userData.avatar})`;
-    window.userId = userData._id;
+    const userId = userData._id;  // Сохраняем id пользователя
 
     cards.forEach((cardData) => {
-      const card = createCard(
-        cardData,
-        handleDeleteCard,
-        handleLikeCard,
-        handleImageClick
-      );
+      // Передаем параметры в createCard как объект
+      const card = createCard({
+        cardData,                // данные карточки
+        userId,                  // id текущего пользователя
+        templateElement,         // шаблон карточки
+        handleImageClick,        // обработчик клика по картинке
+        handleDeleteClick: handleDeleteCard,  // обработчик удаления
+        handleLikeToggle: handleLikeCard      // обработчик лайка
+      });
       placesList.append(card);
     });
   })
@@ -107,12 +128,14 @@ function handleAddCardSubmit(evt) {
 
   addNewCard({ name, link })
     .then((cardData) => {
-      const card = createCard(
+      const card = createCard({
         cardData,
-        handleDeleteCard,
-        handleLikeCard,
-        handleImageClick
-      );
+        userId: window.userId,       // используем глобальную переменную userId, если так принято
+        templateElement,
+        handleImageClick,
+        handleDeleteClick: handleDeleteCard,
+        handleLikeToggle: handleLikeCard
+      });
       placesList.prepend(card);
       closeModal(addPopup);
       addCardForm.reset();
@@ -124,19 +147,24 @@ function handleAddCardSubmit(evt) {
 addCardForm.addEventListener("submit", handleAddCardSubmit);
 
 // Функция удаления карточки
+let currentCardToDelete = null;
+
 function handleDeleteCard(cardElement, cardId) {
-  deleteCard(cardId)
-    .then(() => {
-      cardElement.remove(); // Удаляем карточку из DOM
-    })
-    .catch((err) => console.error("Ошибка при удалении карточки:", err));
+  currentCardToDelete = { cardElement, cardId };
+  openModal(deleteForm);
 }
 
 // Обработчик подтверждения удаления
-deleteForm.addEventListener("submit", (evt) => {
-  evt.preventDefault();
-  if (typeof deleteCardCallback === "function") {
-    deleteCardCallback();
+confirmDeleteButton.addEventListener("click", () => {
+  if (currentCardToDelete) {
+    const { cardElement, cardId } = currentCardToDelete;
+    deleteCardFromServer(cardId)
+      .then(() => {
+        cardElement.remove();
+        closeModal(deleteForm);
+        currentCardToDelete = null;
+      })
+      .catch((err) => console.error("Ошибка при удалении карточки:", err));
   }
 });
 
@@ -215,25 +243,30 @@ function handleAvatarSubmit(evt) {
 
   const avatarUrl = avatarInput.value;
 
-  isImageUrlValid(avatarUrl).then((isValid) => {
-    if (!isValid) {
-      const errorEl = avatarForm.querySelector(`#${avatarInput.id}-error`);
-      avatarInput.classList.add(validationConfig.inputErrorClass);
-      errorEl.textContent = "Недопустимый URL изображения.";
-      errorEl.classList.add(validationConfig.errorClass);
-      return;
-    }
+  isImageUrlValid(avatarUrl)
+    .then((isValid) => {
+      if (!isValid) {
+        const errorEl = avatarForm.querySelector(`#${avatarInput.id}-error`);
+        avatarInput.classList.add(validationConfig.inputErrorClass);
+        errorEl.textContent = "Недопустимый URL изображения.";
+        errorEl.classList.add(validationConfig.errorClass);
+        throw new Error("Валидация изображения не пройдена"); // выбрасываем ошибку, чтобы перейти в catch
+      }
 
-    updateAvatar(avatarUrl)
-      .then((userData) => {
-        avatar.style.backgroundImage = `url(${userData.avatar})`;
-        closeModal(avatarPopup);
-        avatarForm.reset();
-        clearValidation(avatarForm, validationConfig);
-      })
-      .catch((err) => console.error("Ошибка обновления аватара:", err))
-      .finally(() => renderSaving(false, submitButton));
-  });
+      return updateAvatar(avatarUrl);
+    })
+    .then((userData) => {
+      avatar.style.backgroundImage = `url(${userData.avatar})`;
+      closeModal(avatarPopup);
+      avatarForm.reset();
+      clearValidation(avatarForm, validationConfig);
+    })
+    .catch((err) => {
+      console.error("Ошибка при обновлении аватара:", err);
+      // Дополнительно можно уведомить пользователя:
+      // alert("Произошла ошибка при обновлении аватара. Пожалуйста, попробуйте позже.");
+    })
+    .finally(() => renderSaving(false, submitButton));
 }
 avatarForm.addEventListener("submit", handleAvatarSubmit);
 
@@ -244,4 +277,4 @@ avatar.addEventListener("click", () => {
   openModal(avatarPopup);
 });
 
-enableValidation(validationConfig);
+

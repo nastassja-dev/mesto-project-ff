@@ -28,12 +28,3 @@ export function setOverlayCloseHandlers() {
     });
   });
 }
-
-// Универсальная функция renderSaving
-export function renderSaving(
-  isSaving,
-  buttonElement,
-  defaultText = "Сохранить"
-) {
-  buttonElement.textContent = isSaving ? "Сохранение..." : defaultText;
-}

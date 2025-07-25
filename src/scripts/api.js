@@ -73,18 +73,7 @@ export function deleteCardFromServer(cardId) {
   return fetch(`${config.baseUrl}/cards/${cardId}`, {
     method: "DELETE",
     headers: config.headers,
-  }).then((res) => {
-    if (!res.ok) {
-      return res.json().then((err) => {
-        console.error(
-          `Ошибка удаления карточки ${cardId}:`,
-          err.message || err
-        );
-        throw new Error(`Ошибка ${res.status}: ${err.message}`);
-      });
-    }
-    return res.json();
-  });
+  }).then(checkResponse);
 }
 
 export function updateAvatar(avatarUrl) {

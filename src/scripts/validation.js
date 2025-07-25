@@ -1,14 +1,3 @@
-const validationConfig = {
-  formSelector: ".popup__form",
-  inputSelector: ".popup__input",
-  submitButtonSelector: ".popup__button",
-  inactiveButtonClass: "popup__button_disabled",
-  inputErrorClass: "popup__input_type_error",
-  errorClass: "popup__input-error_visible",
-};
-
-const namePattern = /^[A-Za-zА-яЁё\-\s]+$/;
-
 function showInputError(formElement, inputElement, errorMessage, config) {
   const errorElement = formElement.querySelector(`#${inputElement.id}-error`);
   inputElement.classList.add(config.inputErrorClass);
@@ -26,43 +15,13 @@ function hideInputError(formElement, inputElement, config) {
 }
 
 function checkInputValidity(formElement, inputElement, config) {
-  const value = inputElement.value.trim();
-  const name = inputElement.name;
   const isTouched = inputElement.dataset.touched === "true";
 
-  // Проверка на пустое поле
-  if (inputElement.validity.valueMissing) {
+  if (inputElement.validity.patternMismatch) {
     if (isTouched) {
-      if (name === "link") {
-        showInputError(
-          formElement,
-          inputElement,
-          "Введите адрес сайта.",
-          config
-        );
-      } else {
-        showInputError(
-          formElement,
-          inputElement,
-          "Вы пропустили это поле.",
-          config
-        );
-      }
-    } else {
-      hideInputError(formElement, inputElement, config);
-    }
-    return false;
-  }
-
-  // Проверка регулярки для name и description
-  if ((name === "name" || name === "description") && !namePattern.test(value)) {
-    if (isTouched) {
-      showInputError(
-        formElement,
-        inputElement,
-        "Разрешены только латинские, кириллические буквы, знаки дефиса и пробелы.",
-        config
-      );
+      const errorMessage =
+        inputElement.dataset.errorMessage || inputElement.validationMessage;
+      showInputError(formElement, inputElement, errorMessage, config);
     } else {
       hideInputError(formElement, inputElement, config);
     }
@@ -70,7 +29,7 @@ function checkInputValidity(formElement, inputElement, config) {
   }
 
   // Для остальных случаев — стандартное сообщение браузера
-  if (!inputElement.validity.valid) {
+ if (!inputElement.validity.valid) {
     if (isTouched) {
       showInputError(
         formElement,
@@ -104,13 +63,7 @@ function setEventListeners(formElement, config) {
   const buttonElement = formElement.querySelector(config.submitButtonSelector);
 
   inputs.forEach((inputElement) => {
-    inputElement.addEventListener("blur", () => {
-      inputElement.dataset.touched = "true";
-      checkInputValidity(formElement, inputElement, config);
-      toggleButtonState(inputs, buttonElement, formElement, config);
-    });
     inputElement.addEventListener("input", () => {
-      // Если поле не пустое — считаем, что оно "тронуто"
       if (inputElement.value.trim() !== "") {
         inputElement.dataset.touched = "true";
       }
@@ -119,17 +72,7 @@ function setEventListeners(formElement, config) {
     });
   });
 
-  // Блокируем отправку невалидной формы
-  formElement.addEventListener("submit", (evt) => {
-    const isFormValid = inputs.every((input) =>
-      checkInputValidity(formElement, input, config)
-    );
-    if (!isFormValid) {
-      evt.preventDefault();
-    }
-  });
-
-  // Не вызывайте checkInputValidity для всех полей при инициализации!
+  // Не вызываем checkInputValidity при инициализации
   toggleButtonState(inputs, buttonElement, formElement, config);
 }
 
@@ -151,7 +94,7 @@ function clearValidation(formElement, config) {
   toggleButtonState(inputs, buttonElement, formElement, config);
 }
 
-export { enableValidation, clearValidation, validationConfig };
+export { enableValidation, clearValidation };
 
 // Функция HEAD-запроса для проверки изображения
 export function isImageUrlValid(url) {

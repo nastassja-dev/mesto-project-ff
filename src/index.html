@@ -37,7 +37,7 @@
         © 2021 Mesto Russia
       </p>
     </footer>
-    
+
     <!-- Обновление аватара -->
     <div class="popup popup_type_avatar">
       <div class="popup__content">
@@ -58,11 +58,13 @@
         <h3 class="popup__title">Редактировать профиль</h3>
         <form class="popup__form" name="edit-profile">
           <input type="text" name="name" id="name-input" class="popup__input popup__input_type_name" placeholder="Имя"
-            required aria-describedby="name-input-error" minlength="2" maxlength="40">
+            required aria-describedby="name-input-error" minlength="2" maxlength="40"
+            data-error-message="Разрешены только латинские, кириллические буквы, знаки дефиса и пробелы." pattern="^[A-Za-zА-Яа-яЁё\s\-]+$">
           <span class="popup__input-error" id="name-input-error"></span>
           <input type="text" name="description" id="description-input"
             class="popup__input popup__input_type_description" placeholder="Занятие" required
-            aria-describedby="description-input-error" minlength="2" maxlength="200">
+            aria-describedby="description-input-error" minlength="2" maxlength="200" pattern="^[A-Za-zА-Яа-яЁё\s\-]+$"
+            data-error-message="Разрешены только латинские, кириллические буквы, знаки дефиса и пробелы.">
           <span class="popup__input-error" id="description-input-error"></span>
           <button type="submit" class="button popup__button">Сохранить</button>
         </form>
@@ -76,7 +78,9 @@
         <h3 class="popup__title">Новое место</h3>
         <form class="popup__form" name="new-place">
           <input type="text" name="place-name" id="place-name-input" class="popup__input popup__input_type_card-name"
-            placeholder="Название" required aria-describedby="place-name-input-error" minlength="2" maxlength="30">
+            placeholder="Название" required aria-describedby="place-name-input-error" minlength="2" maxlength="30"
+            pattern="^[A-Za-zА-Яа-яЁё\s\-]+$"
+            data-error-message="Разрешены только латинские, кириллические буквы, знаки дефиса и пробелы.">
           <span class="popup__input-error" id="place-name-input-error"></span>
           <input type="url" name="link" id="link-input" class="popup__input popup__input_type_url"
             placeholder="Ссылка на картинку" required aria-describedby="link-input-error">

@@ -1,69 +1,57 @@
-import { likeCard, unlikeCard, deleteCardFromServer } from "./api.js";
-import { openModal, closeModal } from "./modal.js";
-import { setDeleteCardCallback } from "./index.js";
-
-const cardTemplate = document.querySelector("#card-template").content;
-const popupDelete = document.querySelector("#popup-delete");
-
-let deleteCardCallback = null;
-
-export function createCard(cardData, handleImageClick) {
-  const cardElement = cardTemplate.cloneNode(true).querySelector(".card");
-  const cardImage = cardElement.querySelector(".card__image");
+export function createCard({
+  cardData,
+  userId,
+  templateElement,
+  handleImageClick,
+  handleDeleteClick,
+  handleLikeToggle
+}) {
+  const cardElement = templateElement.querySelector(".card").cloneNode(true);
   const cardTitle = cardElement.querySelector(".card__title");
-  const deleteButton = cardElement.querySelector(".card__delete-button");
+  const cardImage = cardElement.querySelector(".card__image");
   const likeButton = cardElement.querySelector(".card__like-button");
-  const likeCounter = cardElement.querySelector(".card__like-count");
+  const likeCount = cardElement.querySelector(".card__like-count");
+  const deleteButton = cardElement.querySelector(".card__delete-button");
 
-  cardTitle.textContent = cardData.name;
-  cardImage.src = cardData.link;
-  cardImage.alt = cardData.name;
-  likeCounter.textContent = cardData.likes.length;
+  const { name, link, likes = [], _id: cardId, owner } = cardData;
 
-  const userId = window.userId;
+  cardTitle.textContent = name;
+  cardImage.src = link;
+  cardImage.alt = name;
+  likeCount.textContent = likes.length;
 
-  // Показываем иконку удаления только если пользователь — владелец карточки
-  if (cardData.owner._id === userId) {
-    deleteButton.addEventListener("click", () => {
-      openModal(popupDelete); // Показываем попап подтверждения
-
-      // ВАЖНО: вызываем функцию setDeleteCardCallback и передаём в неё колбэк
-      setDeleteCardCallback(() => {
-        deleteCardFromServer(cardData._id)
-          .then(() => {
-            cardElement.remove(); // Удаляем элемент из DOM
-            closeModal(popupDelete); // Закрываем попап
-          })
-          .catch((err) => console.error("Ошибка при удалении карточки:", err));
-      });
-    });
-  } else {
-    deleteButton.remove();
-  }
-
-  // Лайки
-  const isLikedByUser = cardData.likes.some((like) => like._id === userId);
-  if (isLikedByUser) {
+  // Проверка, ставил ли лайк текущий пользователь
+  const isLiked = likes.some((like) => like._id === userId);
+  if (isLiked) {
     likeButton.classList.add("card__like-button_active");
   }
 
+  // Проверка, владелец ли текущий пользователь
+  const isOwner = owner && owner._id === userId;
+  if (!isOwner) {
+    deleteButton.remove();
+  }
+
+  // Обработчик клика по изображению
+  cardImage.addEventListener("click", () => handleImageClick({ name, link }));
+
+  // Обработчик удаления
+  if (isOwner) {
+    deleteButton.addEventListener("click", () => {
+      handleDeleteClick(cardElement, cardId);
+    });
+  }
+
+  // Обработчик лайка
   likeButton.addEventListener("click", () => {
-    const isLiked = likeButton.classList.contains("card__like-button_active");
-    const toggleLike = isLiked ? unlikeCard : likeCard;
-
-    toggleLike(cardData._id)
+    const liked = likeButton.classList.contains("card__like-button_active");
+    handleLikeToggle(cardId, liked)
       .then((updatedCard) => {
-        likeCounter.textContent = updatedCard.likes.length;
-        if (updatedCard.likes.some((like) => like._id === userId)) {
-          likeButton.classList.add("card__like-button_active");
-        } else {
-          likeButton.classList.remove("card__like-button_active");
-        }
+        likeCount.textContent = updatedCard.likes.length;
+        likeButton.classList.toggle("card__like-button_active");
       })
-      .catch((err) => console.error(err));
+      .catch(console.error);
   });
-
-  cardImage.addEventListener("click", () => handleImageClick(cardData));
 
   return cardElement;
 }
