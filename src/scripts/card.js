@@ -4,7 +4,7 @@ export function createCard({
   templateElement,
   handleImageClick,
   handleDeleteClick,
-  handleLikeToggle
+  handleLikeToggle,
 }) {
   const cardElement = templateElement.querySelector(".card").cloneNode(true);
   const cardTitle = cardElement.querySelector(".card__title");

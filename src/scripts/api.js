@@ -12,22 +12,14 @@ export function checkResponse(res) {
 
 export function getUserInfo() {
   return fetch(`${config.baseUrl}/users/me`, {
-    headers: {
-      authorization: "b73a31e5-1a23-48b6-a499-ce16861d0b6e",
-    },
+    headers: config.headers,
   }).then(checkResponse);
 }
 
 export const getInitialCards = () => {
   return fetch(`${config.baseUrl}/cards`, {
     headers: config.headers,
-  }).then((res) => {
-    if (res.ok) {
-      return res.json();
-    }
-    // если ошибка, отклоняем промис
-    return Promise.reject(`Ошибка: ${res.status}`);
-  });
+  }).then(checkResponse);
 };
 
 export function updateUserInfo({ name, about }) {
